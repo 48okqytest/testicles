@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Custom Profile</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="profile-container" id="profile-container">
+        <div class="profile-header">
+            <img id="profile-picture" src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-pic">
+            <h1 id="username">Username</h1>
+            <p id="user-bio">This is a default bio. Edit to change.</p>
+        </div>
+        
+        <div class="profile-links" id="profile-links">
+            <!-- Links will be added dynamically -->
+        </div>
+        
+        <div class="aesthetic-elements">
+            <div class="color-box" id="color-box-1"></div>
+            <div class="color-box" id="color-box-2"></div>
+            <div class="shape" id="shape-1"></div>
+        </div>
+        
+        <button id="edit-button" class="edit-button">Edit Profile</button>
+    </div>
+    
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Enter Password</h2>
+            <input type="password" id="password-input" placeholder="Password">
+            <button id="submit-password">Submit</button>
+            <p id="password-error" class="error-message"></p>
+        </div>
+    </div>
+    
+    <div id="edit-modal" class="modal">
+        <div class="modal-content edit-content">
+            <span class="close">&times;</span>
+            <h2>Edit Profile</h2>
+            
+            <div class="form-group">
+                <label for="edit-username">Username</label>
+                <input type="text" id="edit-username" placeholder="Username">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-bio">Bio</label>
+                <textarea id="edit-bio" placeholder="Your bio"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-pfp">Profile Picture URL</label>
+                <input type="text" id="edit-pfp" placeholder="https://example.com/image.jpg">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-bg-color">Background Color</label>
+                <input type="color" id="edit-bg-color" value="#ffffff">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-text-color">Text Color</label>
+                <input type="color" id="edit-text-color" value="#000000">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-accent-1">Accent Color 1</label>
+                <input type="color" id="edit-accent-1" value="#ff0000">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-accent-2">Accent Color 2</label>
+                <input type="color" id="edit-accent-2" value="#00ff00">
+            </div>
+            
+            <div class="form-group">
+                <label>Links</label>
+                <div id="link-fields">
+                    <!-- Link fields will be added here -->
+                </div>
+                <button id="add-link" class="small-button">+ Add Link</button>
+            </div>
+            
+            <button id="save-changes">Save Changes</button>
+        </div>
+    </div>
+
+    <script type="module" src="/src/profile.js"></script>
+</body>
+</html>
