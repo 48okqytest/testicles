@@ -1,6 +1,5 @@
-import { db, doc, setDoc } from './firebase.js';
+import { db, doc, getDoc, setDoc } from './firebase.js';
 
-// DOM Elements
 const editUsername = document.getElementById('edit-username');
 const editBio = document.getElementById('edit-bio');
 const editPfp = document.getElementById('edit-pfp');
@@ -14,15 +13,29 @@ const saveChangesButton = document.getElementById('save-changes');
 
 let currentData = {};
 
-export const initEditModal = async () => {
-    // Load current data into form
-    const docRef = doc(db, "profiles", "myProfile");
-    const docSnap = await getDoc(docRef);
+const addLinkField = (text = '', url = '', index = null) => {
+    const linkId = index !== null ? index : Date.now();
+    const linkDiv = document.createElement('div');
+    linkDiv.className = 'link-item';
+    linkDiv.innerHTML = `
+        <input type="text" placeholder="Link text" class="link-text" value="${text}" data-id="${linkId}">
+        <input type="url" placeholder="URL" class="link-url" value="${url}" data-id="${linkId}">
+        <button class="small-button remove-link" data-id="${linkId}">×</button>
+    `;
+    linkFields.appendChild(linkDiv);
     
-    if (docSnap.exists()) {
-        currentData = docSnap.data();
-    } else {
-        currentData = {
+    const removeButton = linkDiv.querySelector('.remove-link');
+    removeButton.addEventListener('click', () => {
+        linkDiv.remove();
+    });
+};
+
+export const initEditModal = async () => {
+    try {
+        const docRef = doc(db, "profiles", "myProfile");
+        const docSnap = await getDoc(docRef);
+        
+        currentData = docSnap.exists() ? docSnap.data() : {
             username: "My Profile",
             bio: "This is my custom profile. Edit to change.",
             pfp: "https://via.placeholder.com/150",
@@ -35,42 +48,24 @@ export const initEditModal = async () => {
                 { text: "GitHub", url: "https://github.com" }
             ]
         };
+        
+        editUsername.value = currentData.username;
+        editBio.value = currentData.bio;
+        editPfp.value = currentData.pfp;
+        editBgColor.value = currentData.bgColor;
+        editTextColor.value = currentData.textColor;
+        editAccent1.value = currentData.accent1;
+        editAccent2.value = currentData.accent2;
+        
+        linkFields.innerHTML = '';
+        if (currentData.links && currentData.links.length > 0) {
+            currentData.links.forEach((link, index) => {
+                addLinkField(link.text, link.url, index);
+            });
+        }
+    } catch (error) {
+        console.error("Error initializing edit modal:", error);
     }
-    
-    // Populate form fields
-    editUsername.value = currentData.username;
-    editBio.value = currentData.bio;
-    editPfp.value = currentData.pfp;
-    editBgColor.value = currentData.bgColor;
-    editTextColor.value = currentData.textColor;
-    editAccent1.value = currentData.accent1;
-    editAccent2.value = currentData.accent2;
-    
-    // Populate links
-    linkFields.innerHTML = '';
-    if (currentData.links && currentData.links.length > 0) {
-        currentData.links.forEach((link, index) => {
-            addLinkField(link.text, link.url, index);
-        });
-    }
-};
-
-const addLinkField = (text = '', url = '', index = null) => {
-    const linkId = index !== null ? index : Date.now();
-    const linkDiv = document.createElement('div');
-    linkDiv.className = 'link-item';
-    linkDiv.innerHTML = `
-        <input type="text" placeholder="Link text" class="link-text" value="${text}" data-id="${linkId}">
-        <input type="url" placeholder="URL" class="link-url" value="${url}" data-id="${linkId}">
-        <button class="small-button remove-link" data-id="${linkId}">×</button>
-    `;
-    linkFields.appendChild(linkDiv);
-    
-    // Add event listener to remove button
-    const removeButton = linkDiv.querySelector('.remove-link');
-    removeButton.addEventListener('click', () => {
-        linkDiv.remove();
-    });
 };
 
 addLinkButton.addEventListener('click', () => {
@@ -78,7 +73,6 @@ addLinkButton.addEventListener('click', () => {
 });
 
 saveChangesButton.addEventListener('click', async () => {
-    // Gather all data from form
     const updatedData = {
         username: editUsername.value,
         bio: editBio.value,
@@ -90,7 +84,6 @@ saveChangesButton.addEventListener('click', async () => {
         links: []
     };
     
-    // Gather links
     const linkTexts = document.querySelectorAll('.link-text');
     const linkUrls = document.querySelectorAll('.link-url');
     
@@ -104,13 +97,12 @@ saveChangesButton.addEventListener('click', async () => {
         }
     });
     
-    // Save to Firestore
     try {
         await setDoc(doc(db, "profiles", "myProfile"), updatedData);
         alert('Profile updated successfully!');
-        window.location.reload(); // Refresh to show changes
+        window.location.reload();
     } catch (error) {
-        console.error("Error saving profile: ", error);
+        console.error("Error saving profile:", error);
         alert('Error saving profile. Please try again.');
     }
 });
