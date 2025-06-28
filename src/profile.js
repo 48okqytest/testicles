@@ -1,4 +1,4 @@
-import { db, doc, getDoc } from './firebase.js';
+import { db, doc, getDoc, setDoc } from './firebase.js';
 import { checkPassword } from './auth.js';
 
 // DOM Elements
@@ -17,44 +17,55 @@ const closeButtons = document.querySelectorAll('.close');
 
 // Load profile data
 const loadProfile = async () => {
-    const docRef = doc(db, "profiles", "myProfile");
-    const docSnap = await getDoc(docRef);
+    try {
+        const docRef = doc(db, "profiles", "myProfile");
+        const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        applyProfileData(data);
-    } else {
-        // Initialize with default data if no profile exists
-        const defaultData = {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            applyProfileData(data);
+        } else {
+            const defaultData = {
+                username: "My Profile",
+                bio: "This is my custom profile. Edit to change.",
+                pfp: "https://via.placeholder.com/150",
+                bgColor: "#ffffff",
+                textColor: "#000000",
+                accent1: "#ff0000",
+                accent2: "#00ff00",
+                links: [
+                    { text: "Twitter", url: "https://twitter.com" },
+                    { text: "GitHub", url: "https://github.com" }
+                ]
+            };
+            applyProfileData(defaultData);
+            await setDoc(docRef, defaultData);
+        }
+    } catch (error) {
+        console.error("Error loading profile:", error);
+        applyProfileData({
             username: "My Profile",
-            bio: "This is my custom profile. Edit to change.",
+            bio: "Error loading profile data",
             pfp: "https://via.placeholder.com/150",
             bgColor: "#ffffff",
             textColor: "#000000",
             accent1: "#ff0000",
             accent2: "#00ff00",
-            links: [
-                { text: "Twitter", url: "https://twitter.com" },
-                { text: "GitHub", url: "https://github.com" }
-            ]
-        };
-        applyProfileData(defaultData);
+            links: []
+        });
     }
 };
 
-// Apply profile data to the UI
 const applyProfileData = (data) => {
     usernameElement.textContent = data.username;
     bioElement.textContent = data.bio;
     pfpElement.src = data.pfp;
     
-    // Update CSS variables
     document.documentElement.style.setProperty('--bg-color', data.bgColor);
     document.documentElement.style.setProperty('--text-color', data.textColor);
     document.documentElement.style.setProperty('--accent-1', data.accent1);
     document.documentElement.style.setProperty('--accent-2', data.accent2);
     
-    // Update links
     linksContainer.innerHTML = '';
     if (data.links && data.links.length > 0) {
         data.links.forEach(link => {
@@ -68,7 +79,6 @@ const applyProfileData = (data) => {
     }
 };
 
-// Modal controls
 editButton.addEventListener('click', () => {
     passwordModal.style.display = 'flex';
 });
@@ -80,22 +90,25 @@ closeButtons.forEach(button => {
     });
 });
 
-// Password check
-submitPassword.addEventListener('click', () => {
+submitPassword.addEventListener('click', async () => {
     if (checkPassword(passwordInput.value)) {
-        passwordModal.style.display = 'none';
-        passwordInput.value = '';
-        passwordError.textContent = '';
-        import('./edit.js').then(module => {
-            module.initEditModal();
+        try {
+            passwordModal.style.display = 'none';
+            passwordInput.value = '';
+            passwordError.textContent = '';
+            
+            const editModule = await import('./edit.js');
+            editModule.initEditModal();
             editModal.style.display = 'flex';
-        });
+        } catch (error) {
+            console.error("Failed to load edit module:", error);
+            passwordError.textContent = 'Failed to load editor';
+        }
     } else {
         passwordError.textContent = 'Incorrect password';
     }
 });
 
-// Close modal when clicking outside
 window.addEventListener('click', (event) => {
     if (event.target === passwordModal) {
         passwordModal.style.display = 'none';
@@ -106,4 +119,8 @@ window.addEventListener('click', (event) => {
 });
 
 // Initialize the profile
-loadProfile();
+document.addEventListener('DOMContentLoaded', () => {
+    loadProfile().catch(error => {
+        console.error("Profile initialization failed:", error);
+    });
+});
